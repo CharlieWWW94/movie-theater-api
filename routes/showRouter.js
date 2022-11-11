@@ -41,33 +41,49 @@ showRouter.get("/genres/:genre", async (req, res) => {
   }
 });
 
-showRouter.put("/:id/watched", async (req, res) => {
-  try {
-    const watchedShow = await Show.findOne({ where: { id: req.params.id } });
-    if (!watchedShow) {
-      throw new Error("Show not found in db");
+showRouter.put(
+  "/:id/watched",
+  body("rating").not().isEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new Error("Rating must not be empty.");
+      }
+      const watchedShow = await Show.findOne({ where: { id: req.params.id } });
+      if (!watchedShow) {
+        throw new Error("Show not found in db");
+      }
+      watchedShow.rating = req.body.rating;
+      await watchedShow.save();
+      res.status(200).send("Show rating successfully updated");
+    } catch (error) {
+      res.status(400).send(error.message);
     }
-    watchedShow.rating = req.body.rating;
-    await watchedShow.save();
-    res.status(200).send("Show rating successfully updated");
-  } catch (error) {
-    res.status(400).send(error.message);
   }
-});
+);
 
-showRouter.put("/:id/updates", async (req, res) => {
-  try {
-    const statusShow = await Show.findOne({ where: { id: req.params.id } });
-    if (!statusShow) {
-      throw new Error("Show not found in db");
+showRouter.put(
+  "/:id/updates",
+  body("status").isLength({ min: 5, max: 25 }),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new Error("Status must be between 5 and 25 characters.");
+      }
+      const statusShow = await Show.findOne({ where: { id: req.params.id } });
+      if (!statusShow) {
+        throw new Error("Show not found in db");
+      }
+      statusShow.status = req.body.status;
+      await statusShow.save();
+      res.status(200).send("Show status successfully updated");
+    } catch (error) {
+      res.status(400).send(error.message);
     }
-    statusShow.status = req.body.status;
-    await statusShow.save();
-    res.status(200).send("Show status successfully updated");
-  } catch (error) {
-    res.status(400).send(error.message);
   }
-});
+);
 
 showRouter.delete("/:id", async (req, res) => {
   try {
